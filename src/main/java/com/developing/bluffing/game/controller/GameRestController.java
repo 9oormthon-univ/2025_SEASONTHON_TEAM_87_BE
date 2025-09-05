@@ -2,11 +2,13 @@ package com.developing.bluffing.game.controller;
 
 import com.developing.bluffing.game.dto.request.GameReadyRequest;
 import com.developing.bluffing.game.dto.request.GameVoteRequest;
+import com.developing.bluffing.game.dto.response.UserGameRecord;
 import com.developing.bluffing.game.facade.GameRestFacade;
 import com.developing.bluffing.security.entity.UserDetailImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -28,6 +30,13 @@ public class GameRestController {
     public ResponseEntity<Void> vote(@AuthenticationPrincipal UserDetailImpl userDetail, GameVoteRequest r){
         facade.voteAndScheduleFlag(userDetail.getUser(),r);
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/user/record")
+    private ResponseEntity<UserGameRecord> getGameRecord(@AuthenticationPrincipal UserDetailImpl userDetail){
+        UserGameRecord response
+                = facade.getUserRecord(userDetail.getUser());
+        return ResponseEntity.ok(response);
     }
 
 }

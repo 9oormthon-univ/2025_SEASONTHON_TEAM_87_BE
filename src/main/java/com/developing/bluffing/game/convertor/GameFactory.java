@@ -2,16 +2,15 @@ package com.developing.bluffing.game.convertor;
 
 import com.developing.bluffing.game.dto.enums.MessageReference;
 import com.developing.bluffing.game.dto.request.GameChatMessageRequest;
-import com.developing.bluffing.game.dto.response.GameChatMessageResponse;
-import com.developing.bluffing.game.dto.response.GamePhaseChangeResponse;
-import com.developing.bluffing.game.dto.response.GameReVoteResponse;
-import com.developing.bluffing.game.dto.response.GameVoteResultResponse;
+import com.developing.bluffing.game.dto.response.*;
 import com.developing.bluffing.game.entity.ChatRoom;
 import com.developing.bluffing.game.entity.UserInGameInfo;
 import com.developing.bluffing.game.entity.enums.GamePhase;
+import com.developing.bluffing.game.repository.dto.GameRecord;
 import com.developing.bluffing.game.scheduler.dto.MatchUser;
 import com.developing.bluffing.game.scheduler.dto.VoteResult;
 import com.developing.bluffing.game.scheduler.task.GameRoomTask;
+import com.developing.bluffing.user.entity.Users;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -19,6 +18,17 @@ import java.util.List;
 import java.util.stream.IntStream;
 
 public class GameFactory {
+
+    public static UserGameRecord toUserGameRecord(GameRecord record, Users user){
+        ZoneId seoul = ZoneId.of("Asia/Seoul");
+        return UserGameRecord.builder()
+                .userGameCount(record.getUserGameCount())
+                .userWinCount(record.getUserWinCount())
+                .userLossCount(record.getUserLossCount())
+                .userId(user.getId())
+                .searchTime(LocalDateTime.now(seoul))
+                .build();
+    }
     public static GameChatMessageResponse toGameChatMessageResponse(GameChatMessageRequest r){
         return GameChatMessageResponse.builder()
                 .content(r.getContent())
