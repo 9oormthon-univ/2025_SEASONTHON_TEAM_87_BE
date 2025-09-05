@@ -1,0 +1,45 @@
+# src/main/resources/application.yaml
+spring:
+  profiles:
+    active: dev
+
+  datasource:
+    url: jdbc:mysql://localhost:3306/bluffing
+      ?useUnicode=true
+      &characterEncoding=utf8
+      &connectionCollation=utf8mb4_0900_ai_ci
+      &serverTimezone=Asia/Seoul
+      &useSSL=false
+      &allowPublicKeyRetrieval=true
+    username: root
+    password: root
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: create #have to change when prod
+    properties:
+      hibernate:
+        format_sql: true
+        use_sql_comments: false
+        jdbc.time_zone: Asia/Seoul
+    open-in-view: false
+    show-sql: true
+
+server:
+  timezone: Asia/Seoul
+  servlet:
+    encoding:
+      charset: UTF-8
+      force: true
+      enabled: true
+
+
+jwt:
+  issuer: "bluffing-api"
+  access:
+    secret: "VyBaM1g3GVOBJAs4DJf8/U1WnDBftsE+xzcYUdBYZOI="
+    ttl: "PT15M"                         # ISO-8601 Duration: 15분
+  refresh:
+    secret: "k3GcE4phxTGdcr6xWcIvOQ84jaHVRb3227zX93PxuJY="
+    ttl: "P7D"                           # 7일
