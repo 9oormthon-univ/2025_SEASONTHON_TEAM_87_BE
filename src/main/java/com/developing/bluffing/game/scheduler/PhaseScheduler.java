@@ -119,7 +119,7 @@ public class PhaseScheduler implements Runnable {
                 // 채팅 종료 브로드 캐스팅 후 투표 전환
                 schedule(GameFactory.toGameRoomTask(task, GamePhase.VOTE));
             }
-            case VOTE -> {
+            case VOTE,RE_VOTE -> {
                 // 투표시간 기다린 후 로직
                 ChatRoom chatRoom =
                         chatRoomService.updatePhaseById(task.getRoomId(), GamePhase.VOTE_RESULT);
