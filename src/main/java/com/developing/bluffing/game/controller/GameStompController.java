@@ -32,6 +32,16 @@ public class GameStompController {
                 msg
         );
     }
+    
+    // 클라이언트 → 서버 (매칭 요청)
+    @MessageMapping("/match")
+    public void handleMatch(
+            @Payload GameMatchRequest request,
+            @AuthenticationPrincipal UserDetailImpl userDetail) {
+
+        matchService.enqueue(userDetail.getUser(), request.getMatchCategory());
+
+    }
 
     public record MatchResponse(String roomId, String status) {
     }
