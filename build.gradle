@@ -31,7 +31,6 @@ dependencies {
 	// JSON 직렬화
 	implementation 'com.fasterxml.jackson.core:jackson-databind'
 	// 메시지 브로커 (STOMP over WebSocket)
-	implementation 'org.springframework.boot:spring-boot-starter-messaging'
 	implementation 'org.springframework.boot:spring-boot-starter-websocket'
 	implementation 'com.github.f4b6a3:uuid-creator:5.3.5' //UUIDv7
 	implementation 'org.apache.commons:commons-lang3:3.18.0' // String Util

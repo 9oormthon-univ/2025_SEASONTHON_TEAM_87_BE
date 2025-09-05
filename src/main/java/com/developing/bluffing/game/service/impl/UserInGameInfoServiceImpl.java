@@ -5,11 +5,13 @@ import com.developing.bluffing.game.entity.UserInGameInfo;
 import com.developing.bluffing.game.exception.UserInGameInfoException;
 import com.developing.bluffing.game.exception.errorCode.UserInGameInfoErrorCode;
 import com.developing.bluffing.game.repository.UserInGameInfoRepository;
+import com.developing.bluffing.game.scheduler.dto.VoteResult;
 import com.developing.bluffing.game.service.UserInGameInfoService;
 import com.developing.bluffing.user.entity.Users;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -42,6 +44,30 @@ public class UserInGameInfoServiceImpl implements UserInGameInfoService {
     @Override
     public Long countVote(ChatRoom chatRoom) {
         return repository.countVote(chatRoom.getId());
+    }
+
+    @Override
+    public List<VoteResult> voteResult(List<UserInGameInfo> userInGameInfos) {
+        List<VoteResult> results = new ArrayList<>();
+
+        for (UserInGameInfo u : userInGameInfos) {
+            Short voted = u.getVotedUserNumber();
+            // 이미 있는 후보 찾기
+            VoteResult existing = results.stream()
+                    .filter(r -> r.getUserNumber().equals(voted))
+                    .findFirst()
+                    .orElse(null);
+
+            if (existing == null) {
+                results.add(new VoteResult(voted, (short) 1,u.getUserTeam()));
+            } else {
+                // 값 증가 (새 객체로 교체)
+                results.remove(existing);
+                results.add(new VoteResult(voted, (short) (existing.getResult() + 1),existing.getUserTeam()));
+            }
+        }
+
+        return results;
     }
 
     @Override

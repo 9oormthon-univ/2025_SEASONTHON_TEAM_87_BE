@@ -2,6 +2,7 @@ package com.developing.bluffing.game.service.impl;
 
 import com.developing.bluffing.game.entity.ChatRoom;
 import com.developing.bluffing.game.entity.enums.GamePhase;
+import com.developing.bluffing.game.entity.enums.GameTeam;
 import com.developing.bluffing.game.exception.ChatRoomException;
 import com.developing.bluffing.game.exception.errorCode.ChatRoomErrorCode;
 import com.developing.bluffing.game.repository.ChatRoomRepository;
@@ -40,6 +41,14 @@ public class ChatRoomServiceImpl implements ChatRoomService {
     public ChatRoom updatePhaseById(UUID id, GamePhase phase) {
         ChatRoom chatRoom = getById(id);
         chatRoom.updatePhase(phase);
+        return saveOrThrow(chatRoom);
+    }
+
+    @Override
+    @Transactional(readOnly = false)
+    public ChatRoom updateChatResult(UUID id, GameTeam winnerTeam) {
+        ChatRoom chatRoom = getById(id);
+        chatRoom.updateChatResult(GamePhase.END,winnerTeam);
         return saveOrThrow(chatRoom);
     }
 

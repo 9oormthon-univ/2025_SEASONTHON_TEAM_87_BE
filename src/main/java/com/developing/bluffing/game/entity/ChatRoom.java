@@ -27,6 +27,9 @@ public class ChatRoom extends UuidAuditableEntity {
     private AgeGroup taggerAge;
 
     @Column(nullable = false)
+    private Short taggerNumber;
+
+    @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private MatchCategory matchCategory;
 
@@ -42,6 +45,12 @@ public class ChatRoom extends UuidAuditableEntity {
 
     public ChatRoom updatePhase(GamePhase gamePhase){
         this.gamePhase = gamePhase;
+        return this;
+    }
+
+    public ChatRoom updateChatResult(GamePhase phase, GameTeam winnerTeam){
+        this.gamePhase = phase;
+        this.winnerTeam = winnerTeam;
         return this;
     }
 

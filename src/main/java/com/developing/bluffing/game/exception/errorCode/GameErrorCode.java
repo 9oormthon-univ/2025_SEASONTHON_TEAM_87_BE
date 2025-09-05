@@ -9,7 +9,8 @@ import org.springframework.http.HttpStatus;
 @AllArgsConstructor
 public enum GameErrorCode implements GlobalException {
     GAME_NOT_NOW_PHASE(HttpStatus.BAD_REQUEST,7000,"현재 요청과 게임 상황이 맞지 않습니다."),
-    GAME_CANT_VOTE_SELF(HttpStatus.BAD_REQUEST,7001,"자기 자신에게 투표할 수 없습니다..");
+    GAME_CANT_VOTE_SELF(HttpStatus.BAD_REQUEST,7001,"자기 자신에게 투표할 수 없습니다."),
+    GAME_DATA_INCONSISTENCY(HttpStatus.INTERNAL_SERVER_ERROR,7002,"게임 데이터가 불일치합니다.");
 
     private final HttpStatus status;
     private final int errorCode;

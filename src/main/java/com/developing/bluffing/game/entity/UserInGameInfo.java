@@ -50,7 +50,7 @@ public class UserInGameInfo extends LongAuditableEntity{
         this.readyFlag = true;
     }
 
-    public void readyCancle(){
-        this.readyFlag = true;
+    public void readyCancel(){
+        this.readyFlag = false;
     }
 }

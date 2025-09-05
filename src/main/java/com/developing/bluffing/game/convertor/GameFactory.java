@@ -4,15 +4,20 @@ import com.developing.bluffing.game.dto.enums.MassageReference;
 import com.developing.bluffing.game.dto.request.GameChatMessageRequest;
 import com.developing.bluffing.game.dto.response.GameChatMessageResponse;
 import com.developing.bluffing.game.dto.response.GamePhaseChangeResponse;
+import com.developing.bluffing.game.dto.response.GameVoteResultResponse;
 import com.developing.bluffing.game.entity.ChatRoom;
 import com.developing.bluffing.game.entity.UserInGameInfo;
 import com.developing.bluffing.game.entity.enums.GamePhase;
+import com.developing.bluffing.game.entity.enums.GameTeam;
 import com.developing.bluffing.game.scheduler.dto.MatchUser;
+import com.developing.bluffing.game.scheduler.dto.VoteResult;
 import com.developing.bluffing.game.scheduler.task.GameRoomTask;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.List;
+import java.util.Objects;
+import java.util.UUID;
 import java.util.stream.IntStream;
 
 public class GameFactory {
@@ -60,9 +65,18 @@ public class GameFactory {
                 .build();
     }
 
+    public static GameVoteResultResponse toGameVoteResultResponse(ChatRoom chatRoom, List<VoteResult> voteResults){
+        return GameVoteResultResponse.builder()
+                .voteResult(voteResults)
+                .taggerAge(chatRoom.getTaggerAge())
+                .winnerTeam(chatRoom.getWinnerTeam())
+                .taggerNumber(chatRoom.getTaggerNumber())
+                .roomId(chatRoom.getId())
+                .build();
+    }
+
     public static GamePhaseChangeResponse toGamePhaseChangeResponse(GameRoomTask task,String msg){
         ZoneId seoul = ZoneId.of("Asia/Seoul");
-
         return GamePhaseChangeResponse.builder()
                 .changeTime(LocalDateTime.now(seoul))
                 .phase(task.getPhase())

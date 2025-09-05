@@ -45,9 +45,12 @@ public class GameRestFacadeImpl implements GameRestFacade {
 
         //투표 저장
         UserInGameInfo gameUserInfo = userInGameInfoService.getByUserAndChatRoom(user, chatRoom);
-        if (gameUserInfo.getVotedUserNumber().equals(gameUserInfo.getUserNumber())){
+        Short myNumber = gameUserInfo.getUserNumber();
+        Short voted = r.getVotedUserNumber();
+        if (voted != null && voted.equals(myNumber)) {
             throw new GameException(GameErrorCode.GAME_CANT_VOTE_SELF);
         }
+
         gameUserInfo.vote(r.getVotedUserNumber());
         UserInGameInfo savedInfo = userInGameInfoService.saveOrThrow(gameUserInfo);
 
