@@ -1,6 +1,6 @@
 package com.developing.bluffing.game.dto.response;
 
-import com.developing.bluffing.game.dto.enums.MassageReference;
+import com.developing.bluffing.game.dto.enums.MessageReference;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -15,6 +15,6 @@ public class GameChatMessageResponse {
     private UUID roomId;
     private String content;
     private Short senderNumber;
-    private MassageReference massageReference;
+    private MessageReference messageReference;
     private LocalDateTime sendTime;
 }

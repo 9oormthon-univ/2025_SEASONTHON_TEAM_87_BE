@@ -12,7 +12,8 @@ public enum GamePhase {
     VOTE(61_000),          // 1분 투표
     RE_VOTE(61_000),
     VOTE_RESULT(1_000),
-    END(2_000);    // 1초 결과
+    END(2_000),
+    RE_VOTE_RESULT(2_000);    // 1초 결과
 
     private final long defaultDurationMs;
 

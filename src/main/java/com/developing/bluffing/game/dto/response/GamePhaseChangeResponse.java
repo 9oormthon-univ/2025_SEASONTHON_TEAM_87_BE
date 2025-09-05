@@ -1,6 +1,6 @@
 package com.developing.bluffing.game.dto.response;
 
-import com.developing.bluffing.game.dto.enums.MassageReference;
+import com.developing.bluffing.game.dto.enums.MessageReference;
 import com.developing.bluffing.game.entity.enums.GamePhase;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -18,6 +18,6 @@ public class GamePhaseChangeResponse {
     private String content;
     private GamePhase phase;
     private LocalDateTime changeTime;
-    private MassageReference massageReference;
+    private MessageReference messageReference;
 
 }

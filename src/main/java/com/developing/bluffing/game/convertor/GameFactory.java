@@ -1,14 +1,14 @@
 package com.developing.bluffing.game.convertor;
 
-import com.developing.bluffing.game.dto.enums.MassageReference;
+import com.developing.bluffing.game.dto.enums.MessageReference;
 import com.developing.bluffing.game.dto.request.GameChatMessageRequest;
 import com.developing.bluffing.game.dto.response.GameChatMessageResponse;
 import com.developing.bluffing.game.dto.response.GamePhaseChangeResponse;
+import com.developing.bluffing.game.dto.response.GameReVoteResponse;
 import com.developing.bluffing.game.dto.response.GameVoteResultResponse;
 import com.developing.bluffing.game.entity.ChatRoom;
 import com.developing.bluffing.game.entity.UserInGameInfo;
 import com.developing.bluffing.game.entity.enums.GamePhase;
-import com.developing.bluffing.game.entity.enums.GameTeam;
 import com.developing.bluffing.game.scheduler.dto.MatchUser;
 import com.developing.bluffing.game.scheduler.dto.VoteResult;
 import com.developing.bluffing.game.scheduler.task.GameRoomTask;
@@ -16,8 +16,6 @@ import com.developing.bluffing.game.scheduler.task.GameRoomTask;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.List;
-import java.util.Objects;
-import java.util.UUID;
 import java.util.stream.IntStream;
 
 public class GameFactory {
@@ -27,7 +25,7 @@ public class GameFactory {
                 .roomId(r.getRoomId())
                 .senderNumber(r.getSenderNumber())
                 .sendTime(r.getSendTime())
-                .massageReference(MassageReference.USER)
+                .messageReference(MessageReference.USER)
                 .build();
     }
 
@@ -75,6 +73,14 @@ public class GameFactory {
                 .build();
     }
 
+    public static GameReVoteResponse toGameReVoteResponse(List<Short> winnersNumbers ,List<VoteResult> voteResults){
+        return GameReVoteResponse.builder()
+                .sameRateUserNumber(winnersNumbers)
+                .voteResults(voteResults)
+                .phase(GamePhase.RE_VOTE)
+                .build();
+    }
+
     public static GamePhaseChangeResponse toGamePhaseChangeResponse(GameRoomTask task,String msg){
         ZoneId seoul = ZoneId.of("Asia/Seoul");
         return GamePhaseChangeResponse.builder()
@@ -82,7 +88,7 @@ public class GameFactory {
                 .phase(task.getPhase())
                 .roomId(task.getRoomId())
                 .content(msg)
-                .massageReference(MassageReference.SERVER)
+                .messageReference(MessageReference.SERVER)
                 .build();
     }
 }

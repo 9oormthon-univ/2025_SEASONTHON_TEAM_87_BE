@@ -1,6 +1,6 @@
 package com.developing.bluffing.game.dto.enums;
 
-public enum MassageReference {
+public enum MessageReference {
 
     SERVER,
     USER

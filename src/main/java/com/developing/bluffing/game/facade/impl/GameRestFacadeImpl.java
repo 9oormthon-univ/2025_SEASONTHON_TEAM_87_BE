@@ -53,13 +53,7 @@ public class GameRestFacadeImpl implements GameRestFacade {
 
         gameUserInfo.vote(r.getVotedUserNumber());
         UserInGameInfo savedInfo = userInGameInfoService.saveOrThrow(gameUserInfo);
-
-        //투표 상황 확인
-        long voteCount = userInGameInfoService.countVote(chatRoom);
-        short chatCurrentPlayer = chatRoom.getCurrentPlayer();
-        if(voteCount >= chatCurrentPlayer){
-            //여기에 스케쥴 등록 로직
-        }
+        //스케쥴 등록 필요 x 스케줄러에서 처리
     }
 
     //방 조회 -> 유저정보 조회 및 레디 수정 -> 방 준비 상태확인 -> 준비 완료시 게임시작 스케쥴 시작

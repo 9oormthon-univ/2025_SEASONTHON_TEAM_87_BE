@@ -2,10 +2,12 @@ package com.developing.bluffing.game.scheduler;
 
 import com.developing.bluffing.game.convertor.GameFactory;
 import com.developing.bluffing.game.dto.response.GamePhaseChangeResponse;
+import com.developing.bluffing.game.dto.response.GameReVoteResponse;
 import com.developing.bluffing.game.dto.response.GameVoteResultResponse;
 import com.developing.bluffing.game.entity.ChatRoom;
 import com.developing.bluffing.game.entity.UserInGameInfo;
 import com.developing.bluffing.game.entity.enums.GamePhase;
+import com.developing.bluffing.game.entity.enums.GameTeam;
 import com.developing.bluffing.game.scheduler.dto.VoteResult;
 import com.developing.bluffing.game.scheduler.task.GameRoomTask;
 import com.developing.bluffing.game.service.ChatRoomService;
@@ -102,6 +104,7 @@ public class PhaseScheduler implements Runnable {
     }
 
     //추가 로직 설계해야함
+    //나중에 분리
     private void process(GameRoomTask task) {
         GamePhase nowGamePhase = task.getPhase();
         switch (nowGamePhase) {
@@ -120,9 +123,14 @@ public class PhaseScheduler implements Runnable {
                 schedule(GameFactory.toGameRoomTask(task, GamePhase.VOTE));
             }
             case VOTE,RE_VOTE -> {
-                // 투표시간 기다린 후 로직
-                ChatRoom chatRoom =
-                        chatRoomService.updatePhaseById(task.getRoomId(), GamePhase.VOTE_RESULT);
+                ChatRoom chatRoom;
+                if (nowGamePhase == GamePhase.RE_VOTE){
+                    chatRoom =
+                            chatRoomService.updatePhaseById(task.getRoomId(), GamePhase.RE_VOTE_RESULT);
+                }else {
+                    chatRoom =
+                            chatRoomService.updatePhaseById(task.getRoomId(), GamePhase.VOTE_RESULT);
+                }
                 //투표가 끝남을 알림
                 GamePhaseChangeResponse msg
                         = GameFactory.toGamePhaseChangeResponse(task, "Vote Finish");
@@ -133,10 +141,10 @@ public class PhaseScheduler implements Runnable {
                 // 투표 종료 브로드 캐스팅 후 투표 집계로 전환
                 schedule(GameFactory.toGameRoomTask(task, GamePhase.VOTE_RESULT));
             }
-            case VOTE_RESULT -> {
+            case VOTE_RESULT, RE_VOTE_RESULT -> {
                 //게임 종료로 변경
                 ChatRoom chatRoom =
-                        chatRoomService.getById(task.getRoomId());
+                        chatRoomService.updatePhaseById(task.getRoomId(),GamePhase.END);
 
                 //TODO : 리팩토링시 위에 채팅 조회 안하고 id조회로 바꾸기
                 List<UserInGameInfo> userInGameInfos =
@@ -148,8 +156,18 @@ public class PhaseScheduler implements Runnable {
                 List<VoteResult> winners = findWinners(voteResults);
                 if (winners.size() == 1) {
                     VoteResult winner = winners.getFirst();
-                    ChatRoom gameResult =
-                            chatRoomService.updateChatResult(chatRoom.getId(), winner.getUserTeam());
+                    ChatRoom gameResult;
+                    short taggerNumber = chatRoom.getTaggerNumber();
+                    short winnerNumber = winner.getUserNumber();
+
+                    if (taggerNumber == winnerNumber){
+                        gameResult =
+                                chatRoomService.updateChatResult(chatRoom.getId(), GameTeam.CITIZEN);
+                    }else{
+                        gameResult =
+                                chatRoomService.updateChatResult(chatRoom.getId(),GameTeam.MAFIA);
+                    }
+
 
                     GameVoteResultResponse msg
                             = GameFactory.toGameVoteResultResponse(gameResult, voteResults);
@@ -160,19 +178,29 @@ public class PhaseScheduler implements Runnable {
 
                     GameRoomTask removed = latestTaskByRoom.remove(gameResult.getId());
                     if (removed != null) { queue.remove(removed); }
-                } else {
-                    //우승자가 1명이 아닌 경우 다시 시작
+                } else if(nowGamePhase == GamePhase.VOTE_RESULT) {
+                    //우승자가 1명이 아닌 경우 다시 업데이트 및 시작
                     ChatRoom reChatRoom =
                             chatRoomService.updatePhaseById(task.getRoomId(), GamePhase.RE_VOTE);
                     GameRoomTask newTask = GameFactory.toGameRoomTask(task, reChatRoom.getGamePhase());
+                    GameReVoteResponse msg
+                            = GameFactory.toGameReVoteResponse(winners.stream().map(VoteResult::getUserNumber).toList(),voteResults);
                     schedule(newTask);
-
-                    GamePhaseChangeResponse msg
-                            = GameFactory.toGamePhaseChangeResponse(newTask, "ReVote start");
                     messaging.convertAndSend(
                             "/api/v1/game/server/room/" + chatRoom.getId(),
                             msg
                     );
+                } else{
+                    //재투표 결과는 블러퍼 승리
+                    ChatRoom gameResult = chatRoomService.updateChatResult(chatRoom.getId(),GameTeam.MAFIA);
+                    GameVoteResultResponse msg
+                            = GameFactory.toGameVoteResultResponse(gameResult, voteResults);
+                    messaging.convertAndSend(
+                            "/api/v1/game/server/room/" + gameResult.getId(),
+                            msg
+                    );
+                    GameRoomTask removed = latestTaskByRoom.remove(gameResult.getId());
+                    if (removed != null) { queue.remove(removed); }
                 }
             }
         }
