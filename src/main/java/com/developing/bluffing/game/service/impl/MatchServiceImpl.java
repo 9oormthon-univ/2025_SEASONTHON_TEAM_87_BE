@@ -42,9 +42,12 @@ public class MatchServiceImpl implements MatchService {
     }
 
     @Override
-    public synchronized void enqueue(Users user, MatchCategory matchCategory) {
-        queues.computeIfAbsent(matchCategory, k -> new ConcurrentLinkedQueue<>()).add(user);
-        tryMatch(matchCategory);
+    public synchronized void enqueue(Users user, MatchCategory cat) {
+        Queue<Users> q = queues.computeIfAbsent(cat, k -> new ConcurrentLinkedQueue<>());
+        // 이미 큐에 있으면 무시
+        if (q.stream().anyMatch(u -> u.getId().equals(user.getId()))) return;
+        q.add(user);
+        tryMatch(cat);
     }
 
     private void tryMatch(MatchCategory matchCategory) {
