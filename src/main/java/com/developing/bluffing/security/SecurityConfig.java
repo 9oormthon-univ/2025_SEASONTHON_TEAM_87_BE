@@ -59,6 +59,7 @@ public class SecurityConfig {
                     "/swagger-ui/**",
                     "/swagger-resources/**",
                     "/webjars/**"
+                    "/error" 
                 ).permitAll()
 
                 // 나머지 API 인증 필요
