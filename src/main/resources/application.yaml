@@ -14,6 +14,7 @@ spring:
       ddl-auto: update # 운영 환경에서는 create 대신 update 또는 validate 사용
     properties:
       hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
         format_sql: true
         use_sql_comments: false
         jdbc.time_zone: Asia/Seoul
@@ -32,7 +33,7 @@ jwt:
   issuer: "bluffing-api"
   access:
     secret: "VyBaM1g3GVOBJAs4DJf8/U1WnDBftsE+xzcYUdBYZOI="
-    ttl: "PT15M" # ISO-8601 Duration: 15분
+    ttl: "PT15M" # 15분
   refresh:
     secret: "k3GcE4phxTGdcr6xWcIvOQ84jaHVRb3227zX93PxuJY="
     ttl: "P7D" # 7일
