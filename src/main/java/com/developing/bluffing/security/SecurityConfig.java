@@ -25,56 +25,65 @@ public class SecurityConfig {
     private final UserDetailImplServiceImpl userDetailsService;
     private final AccessTokenBlacklistService accessTokenBlacklistService;
 
-    public SecurityConfig(JwtUtil jwtUtil, UserDetailImplServiceImpl userDetailsService, AccessTokenBlacklistService accessTokenBlacklistService) {
+    public SecurityConfig(JwtUtil jwtUtil,
+                          UserDetailImplServiceImpl userDetailsService,
+                          AccessTokenBlacklistService accessTokenBlacklistService) {
         this.jwtUtil = jwtUtil;
         this.userDetailsService = userDetailsService;
         this.accessTokenBlacklistService = accessTokenBlacklistService;
     }
 
-
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                // REST 기본 세팅
-                .csrf(csrf -> csrf.disable())
-                .cors(Customizer.withDefaults())
-                .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .requestCache(rc -> rc.disable())
-                .formLogin(fl -> fl.disable())
-                .httpBasic(hb -> hb.disable())
+            .csrf(csrf -> csrf.disable())
+            .cors(Customizer.withDefaults())
+            .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .requestCache(rc -> rc.disable())
+            .formLogin(fl -> fl.disable())
+            .httpBasic(hb -> hb.disable())
 
-                // 인가 규칙
-                .authorizeHttpRequests(reg -> reg
-                        // WebSocket/SockJS는 핸드셰이크/프롤로그 때문에 열어둠
-                        .requestMatchers("/ws/**").permitAll()
-                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+            .authorizeHttpRequests(reg -> reg
+                // WebSocket/SockJS 허용
+                .requestMatchers("/ws/**").permitAll()
+                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
-                        // 인증 예외(회원가입/로그인 등 공개)
-                        .requestMatchers("/api/v1/auth/**").permitAll()
-                        .requestMatchers("/api/v1/user/id").permitAll()
-                        // 그 외 보호 구간
-                        .requestMatchers("/api/**").authenticated()
-                        .anyRequest().permitAll()
-                )
+                // 인증 예외(회원가입/로그인 등 공개)
+                .requestMatchers("/api/v1/auth/**").permitAll()
+                .requestMatchers("/api/v1/user/id").permitAll()
 
-                // 실패 응답을 REST식으로 고정
-                .exceptionHandling(ex -> ex
-                        .authenticationEntryPoint((req, res, e) -> res.sendError(HttpServletResponse.SC_UNAUTHORIZED))
-                        .accessDeniedHandler((req, res, e) -> res.sendError(HttpServletResponse.SC_FORBIDDEN))
-                )
+                // Swagger 허용
+                .requestMatchers(
+                    "/v3/api-docs/**",
+                    "/swagger-ui.html",
+                    "/swagger-ui/**",
+                    "/swagger-resources/**",
+                    "/webjars/**"
+                ).permitAll()
 
+                // 나머지 API 인증 필요
+                .requestMatchers("/api/**").authenticated()
+                .anyRequest().permitAll()
+            )
 
-                // JWT 필터는 가장 마지막 선에서만 동작
-                .addFilterBefore(
-                        new JwtAuthenticationFilter(jwtUtil, userDetailsService, accessTokenBlacklistService),
-                        UsernamePasswordAuthenticationFilter.class
-                );
+            // REST 실패 응답
+            .exceptionHandling(ex -> ex
+                .authenticationEntryPoint((req, res, e) -> res.sendError(HttpServletResponse.SC_UNAUTHORIZED))
+                .accessDeniedHandler((req, res, e) -> res.sendError(HttpServletResponse.SC_FORBIDDEN))
+            )
+
+            // JWT 필터
+            .addFilterBefore(
+                new JwtAuthenticationFilter(jwtUtil, userDetailsService, accessTokenBlacklistService),
+                UsernamePasswordAuthenticationFilter.class
+            );
 
         return http.build();
     }
 
     @Bean
-    PasswordEncoder passwordEncoder() {
+    public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 }
+
