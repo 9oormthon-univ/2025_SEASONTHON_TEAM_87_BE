@@ -29,15 +29,12 @@ server:
       force: true
       enabled: true
 
-<<<<<<< HEAD
 logging:
   level:
     org.springframework.web.socket: DEBUG
     org.springframework.messaging: DEBUG
     org.springframework.security: DEBUG
 
-=======
->>>>>>> 5a55c404e4db8ba28ade5b4761dea8816adf92a3
 jwt:
   issuer: "bluffing-api"
   access:
