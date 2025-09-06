@@ -117,7 +117,7 @@ public class PhaseScheduler implements Runnable {
                 GamePhaseChangeResponse msg
                         = GameFactory.toGamePhaseChangeResponse(task, "Chat Finish And Vote Start");
                 messaging.convertAndSend(
-                        "/api/v1/game/server/room/" + chatRoom.getId(),
+                        "/topic/game/room/" + chatRoom.getId(),
                         msg
                 );
                 // 채팅 종료 브로드 캐스팅 후 투표 전환
@@ -130,7 +130,7 @@ public class PhaseScheduler implements Runnable {
                 GamePhaseChangeResponse msg
                         = GameFactory.toGamePhaseChangeResponse(task, "Vote Finish");
                 messaging.convertAndSend(
-                        "/api/v1/game/server/room/" + chatRoom.getId(),
+                        "/topic/game/room/" + chatRoom.getId(),
                         msg
                 );
                 // 투표 종료 브로드 캐스팅 후 투표 집계로 전환
@@ -169,7 +169,7 @@ public class PhaseScheduler implements Runnable {
                     GameVoteResultResponse msg
                             = GameFactory.toGameVoteResultResponse(gameResult, voteResults);
                     messaging.convertAndSend(
-                            "/api/v1/game/server/room/" + gameResult.getId(),
+                            "/topic/game/room/" + chatRoom.getId(),
                             msg
                     );
 
@@ -185,7 +185,7 @@ public class PhaseScheduler implements Runnable {
                             = GameFactory.toGameReVoteResponse(winners.stream().map(VoteResult::getUserNumber).toList(),voteResults);
                     schedule(newTask);
                     messaging.convertAndSend(
-                            "/api/v1/game/server/room/" + chatRoom.getId(),
+                            "/topic/game/room/" + chatRoom.getId(),
                             msg
                     );
                 }
@@ -197,7 +197,7 @@ public class PhaseScheduler implements Runnable {
                 GamePhaseChangeResponse msg
                         = GameFactory.toGamePhaseChangeResponse(task, "ReVote Finish");
                 messaging.convertAndSend(
-                        "/api/v1/game/server/room/" + chatRoom.getId(),
+                        "/topic/game/room/" + chatRoom.getId(),
                         msg
                 );
                 // 투표 종료 브로드 캐스팅 후 투표 집계로 전환
@@ -232,7 +232,7 @@ public class PhaseScheduler implements Runnable {
                     GameVoteResultResponse msg
                             = GameFactory.toGameVoteResultResponse(gameResult, voteResults);
                     messaging.convertAndSend(
-                            "/api/v1/game/server/room/" + gameResult.getId(),
+                            "/topic/game/room/" + gameResult.getId(),
                             msg
                     );
 
@@ -245,7 +245,7 @@ public class PhaseScheduler implements Runnable {
                     GameVoteResultResponse msg
                             = GameFactory.toGameVoteResultResponse(gameResult, voteResults);
                     messaging.convertAndSend(
-                            "/api/v1/game/server/room/" + gameResult.getId(),
+                            "/topic/game/room/" + gameResult.getId(),
                             msg
                     );
                     chatRoomService.updatePhaseById(task.getRoomId(),GamePhase.END);

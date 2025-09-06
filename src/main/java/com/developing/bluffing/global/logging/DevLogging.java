@@ -29,6 +29,7 @@ public class DevLogging {
             Object result = joinPoint.proceed();
             long end = System.currentTimeMillis();
             log.info("[END] 메서드: {} (소요시간: {}ms)", methodName, end - start);
+
             log.info("   ⬅ 반환값: {}", result);
             return result;
         } catch (GlobalBaseException e) {
