@@ -109,6 +109,7 @@ public class PhaseScheduler implements Runnable {
         GamePhase nowGamePhase = task.getPhase();
         switch (nowGamePhase) {
             case CHAT -> {
+                log.info("[SCHEDULER] [CHAT] TASK INFO : "+task.toString());
                 //채팅이 끝난 후 로직
                 ChatRoom chatRoom =
                         chatRoomService.updatePhaseById(task.getRoomId(), GamePhase.VOTE);
@@ -122,15 +123,9 @@ public class PhaseScheduler implements Runnable {
                 // 채팅 종료 브로드 캐스팅 후 투표 전환
                 schedule(GameFactory.toGameRoomTask(task, GamePhase.VOTE));
             }
-            case VOTE,RE_VOTE -> {
-                ChatRoom chatRoom;
-                if (nowGamePhase == GamePhase.RE_VOTE){
-                    chatRoom =
-                            chatRoomService.updatePhaseById(task.getRoomId(), GamePhase.RE_VOTE_RESULT);
-                }else {
-                    chatRoom =
-                            chatRoomService.updatePhaseById(task.getRoomId(), GamePhase.VOTE_RESULT);
-                }
+            case VOTE -> {
+                log.info("[SCHEDULER] [VOTE] TASK INFO : "+task.toString());
+                ChatRoom chatRoom = chatRoomService.updatePhaseById(task.getRoomId(), GamePhase.VOTE_RESULT);
                 //투표가 끝남을 알림
                 GamePhaseChangeResponse msg
                         = GameFactory.toGamePhaseChangeResponse(task, "Vote Finish");
@@ -141,10 +136,12 @@ public class PhaseScheduler implements Runnable {
                 // 투표 종료 브로드 캐스팅 후 투표 집계로 전환
                 schedule(GameFactory.toGameRoomTask(task, GamePhase.VOTE_RESULT));
             }
-            case VOTE_RESULT, RE_VOTE_RESULT -> {
+
+            case VOTE_RESULT -> {
+
+                log.info("[SCHEDULER] [VOTE_RESULT] TASK INFO : "+task.toString());
                 //게임 종료로 변경
-                ChatRoom chatRoom =
-                        chatRoomService.updatePhaseById(task.getRoomId(),GamePhase.END);
+                ChatRoom chatRoom = chatRoomService.getById(task.getRoomId());
 
                 //TODO : 리팩토링시 위에 채팅 조회 안하고 id조회로 바꾸기
                 List<UserInGameInfo> userInGameInfos =
@@ -176,9 +173,10 @@ public class PhaseScheduler implements Runnable {
                             msg
                     );
 
+                    chatRoomService.updatePhaseById(gameResult.getId(),GamePhase.END);
                     GameRoomTask removed = latestTaskByRoom.remove(gameResult.getId());
                     if (removed != null) { queue.remove(removed); }
-                } else if(nowGamePhase == GamePhase.VOTE_RESULT) {
+                } else {
                     //우승자가 1명이 아닌 경우 다시 업데이트 및 시작
                     ChatRoom reChatRoom =
                             chatRoomService.updatePhaseById(task.getRoomId(), GamePhase.RE_VOTE);
@@ -190,7 +188,58 @@ public class PhaseScheduler implements Runnable {
                             "/api/v1/game/server/room/" + chatRoom.getId(),
                             msg
                     );
-                } else{
+                }
+            }
+            case RE_VOTE -> {
+                log.info("[SCHEDULER] [RE_VOTE] TASK INFO : "+task.toString());
+                ChatRoom chatRoom = chatRoomService.updatePhaseById(task.getRoomId(), GamePhase.RE_VOTE_RESULT);
+                //투표가 끝남을 알림
+                GamePhaseChangeResponse msg
+                        = GameFactory.toGamePhaseChangeResponse(task, "ReVote Finish");
+                messaging.convertAndSend(
+                        "/api/v1/game/server/room/" + chatRoom.getId(),
+                        msg
+                );
+                // 투표 종료 브로드 캐스팅 후 투표 집계로 전환
+                schedule(GameFactory.toGameRoomTask(task, GamePhase.RE_VOTE_RESULT));
+            }
+            case RE_VOTE_RESULT -> {
+                log.info("[SCHEDULER] [RE_VOTE_RESULT] TASK INFO : "+task.toString());
+                //게임 종료로 변경
+                ChatRoom chatRoom = chatRoomService.getById(task.getRoomId());
+
+                //TODO : 리팩토링시 위에 채팅 조회 안하고 id조회로 바꾸기
+                List<UserInGameInfo> userInGameInfos =
+                        userInGameInfoService.getByChatRoom(chatRoom);
+                List<VoteResult> voteResults = userInGameInfoService
+                        .voteResult(userInGameInfos);
+
+                //최다 득표자 찾기 여기서 분기
+                List<VoteResult> winners = findWinners(voteResults);
+                if (winners.size() == 1) {
+                    VoteResult winner = winners.getFirst();
+                    ChatRoom gameResult;
+                    short taggerNumber = chatRoom.getTaggerNumber();
+                    short winnerNumber = winner.getUserNumber();
+
+                    if (taggerNumber == winnerNumber){
+                        gameResult =
+                                chatRoomService.updateChatResult(chatRoom.getId(), GameTeam.CITIZEN);
+                    }else{
+                        gameResult =
+                                chatRoomService.updateChatResult(chatRoom.getId(),GameTeam.MAFIA);
+                    }
+                    GameVoteResultResponse msg
+                            = GameFactory.toGameVoteResultResponse(gameResult, voteResults);
+                    messaging.convertAndSend(
+                            "/api/v1/game/server/room/" + gameResult.getId(),
+                            msg
+                    );
+
+                    chatRoomService.updatePhaseById(gameResult.getId(),GamePhase.END);
+                    GameRoomTask removed = latestTaskByRoom.remove(gameResult.getId());
+                    if (removed != null) { queue.remove(removed); }
+                } else {
                     //재투표 결과는 블러퍼 승리
                     ChatRoom gameResult = chatRoomService.updateChatResult(chatRoom.getId(),GameTeam.MAFIA);
                     GameVoteResultResponse msg
@@ -199,9 +248,12 @@ public class PhaseScheduler implements Runnable {
                             "/api/v1/game/server/room/" + gameResult.getId(),
                             msg
                     );
+                    chatRoomService.updatePhaseById(task.getRoomId(),GamePhase.END);
                     GameRoomTask removed = latestTaskByRoom.remove(gameResult.getId());
                     if (removed != null) { queue.remove(removed); }
                 }
+
+
             }
         }
     }
