@@ -4,12 +4,14 @@ import com.developing.bluffing.game.convertor.GameFactory;
 import com.developing.bluffing.game.dto.request.GameReadyRequest;
 import com.developing.bluffing.game.dto.request.GameVoteRequest;
 import com.developing.bluffing.game.dto.response.GamePhaseChangeResponse;
+import com.developing.bluffing.game.dto.response.UserGameRecord;
 import com.developing.bluffing.game.entity.ChatRoom;
 import com.developing.bluffing.game.entity.UserInGameInfo;
 import com.developing.bluffing.game.entity.enums.GamePhase;
 import com.developing.bluffing.game.exception.GameException;
 import com.developing.bluffing.game.exception.errorCode.GameErrorCode;
 import com.developing.bluffing.game.facade.GameRestFacade;
+import com.developing.bluffing.game.repository.dto.GameRecord;
 import com.developing.bluffing.game.scheduler.PhaseScheduler;
 import com.developing.bluffing.game.scheduler.task.GameRoomTask;
 import com.developing.bluffing.game.service.ChatRoomService;
@@ -73,7 +75,6 @@ public class GameRestFacadeImpl implements GameRestFacade {
             //채팅방 스케쥴 TASK 생성
             List<UserInGameInfo> gameUsers = userInGameInfoService.getByChatRoom(chatRoom);
             GameRoomTask task = GameFactory.toGameRoomTask(chatRoom,GamePhase.CHAT,gameUsers);
-
             GamePhaseChangeResponse response
                     = GameFactory.toGamePhaseChangeResponse(task,"chat start");
             // 매칭시 클라이언트에서 방id를 구독해야 확인 가능
@@ -83,6 +84,12 @@ public class GameRestFacadeImpl implements GameRestFacade {
             );
             scheduler.schedule(task);
         }
+    }
+
+    @Override
+    public UserGameRecord getUserRecord(Users user) {
+        GameRecord userRecord = userInGameInfoService.getUserGameRecord(user);
+        return GameFactory.toUserGameRecord(userRecord,user);
     }
 
 }

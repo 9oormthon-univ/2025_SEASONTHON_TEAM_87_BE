@@ -5,6 +5,7 @@ import com.developing.bluffing.game.entity.UserInGameInfo;
 import com.developing.bluffing.game.exception.UserInGameInfoException;
 import com.developing.bluffing.game.exception.errorCode.UserInGameInfoErrorCode;
 import com.developing.bluffing.game.repository.UserInGameInfoRepository;
+import com.developing.bluffing.game.repository.dto.GameRecord;
 import com.developing.bluffing.game.scheduler.dto.VoteResult;
 import com.developing.bluffing.game.service.UserInGameInfoService;
 import com.developing.bluffing.user.entity.Users;
@@ -28,6 +29,11 @@ public class UserInGameInfoServiceImpl implements UserInGameInfoService {
         } catch (Exception e) {
             throw new UserInGameInfoException(UserInGameInfoErrorCode.USER_IN_GAME_INFO_NOT_FOUND_ERROR);
         }
+    }
+
+    @Override
+    public GameRecord getUserGameRecord(Users user){
+        return repository.findGameRecordByUserId(user.getId());
     }
 
     @Override

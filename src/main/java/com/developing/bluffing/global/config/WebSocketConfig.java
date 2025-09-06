@@ -12,6 +12,10 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry r) {
+        // 1) 순수 WebSocket
+        r.addEndpoint("/ws")
+                .setAllowedOriginPatterns("*");
+
         r.addEndpoint("/ws")
                 .setAllowedOriginPatterns("*")
                 .withSockJS();
