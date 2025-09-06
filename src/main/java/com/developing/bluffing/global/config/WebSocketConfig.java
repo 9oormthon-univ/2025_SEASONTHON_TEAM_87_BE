@@ -52,7 +52,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
         r.setApplicationDestinationPrefixes("/api/v1/game/chat");
 
         // 서버 -> 특정 유저 1:1 전송 prefix
-        r.setUserDestinationPrefix("/api/v1/game/match");
+        r.setUserDestinationPrefix("/user");
     }
 
     @Override
