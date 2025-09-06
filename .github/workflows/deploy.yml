@@ -10,17 +10,14 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1️⃣ 리포지토리 코드 체크아웃
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      # 2️⃣ SSH 연결 준비
       - name: Setup SSH key
         uses: webfactory/ssh-agent@v0.8.2
         with:
           ssh-private-key: ${{ secrets.EC2_SSH_KEY }}
 
-      # 3️⃣ EC2 접속 후 명령어 실행
       - name: Deploy to EC2
         run: |
           ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.EC2_HOST }} << 'EOF'
