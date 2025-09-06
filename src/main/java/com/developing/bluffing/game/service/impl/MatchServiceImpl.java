@@ -2,16 +2,18 @@ package com.developing.bluffing.game.service.impl;
 
 import com.developing.bluffing.game.entity.ChatRoom;
 import com.developing.bluffing.game.entity.UserInGameInfo;
+import com.developing.bluffing.game.entity.Users;
 import com.developing.bluffing.game.entity.enums.*;
 import com.developing.bluffing.game.dto.response.GameMatchedResponse;
 import com.developing.bluffing.game.service.ChatRoomService;
-import com.developing.bluffing.game.service.UserInGameInfoService;
 import com.developing.bluffing.game.service.MatchService;
-import com.developing.bluffing.user.entity.Users;
+import com.developing.bluffing.game.service.UserInGameInfoService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+import java.time.Period;
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
@@ -23,10 +25,13 @@ public class MatchServiceImpl implements MatchService {
     private final ChatRoomService chatRoomService;
     private final UserInGameInfoService userInGameInfoService;
 
-    private static final int ROOM_SIZE = 6; // 방 최소 인원
+    private static final int ROOM_SIZE = 6;
 
-    // 매칭 대기열
     private final Map<MatchCategory, Queue<Users>> queues = new HashMap<>();
+
+    private int calculateAge(LocalDate birth) {
+        return Period.between(birth, LocalDate.now()).getYears();
+    }
 
     @Override
     public synchronized void enqueue(Users user, MatchCategory matchCategory) {
@@ -36,20 +41,19 @@ public class MatchServiceImpl implements MatchService {
 
     private void tryMatch(MatchCategory matchCategory) {
         Queue<Users> queue = queues.get(matchCategory);
-        if (queue.size() < ROOM_SIZE) return; // 인원 부족 시 종료
+        if (queue.size() < ROOM_SIZE) return;
 
-        // ROOM_SIZE 만큼 뽑기
         List<Users> matchedUsers = new ArrayList<>();
         for (int i = 0; i < ROOM_SIZE; i++) {
             Users u = queue.poll();
             if (u != null) matchedUsers.add(u);
         }
-        if (matchedUsers.size() < ROOM_SIZE) { // 부족하면 롤백
+
+        if (matchedUsers.size() < ROOM_SIZE) {
             matchedUsers.forEach(queue::add);
             return;
         }
 
-        // ChatRoom 생성
         ChatRoom room = chatRoomService.saveOrThrow(
                 ChatRoom.builder()
                         .matchCategory(matchCategory)
@@ -58,20 +62,19 @@ public class MatchServiceImpl implements MatchService {
                         .maxPlayer((short) matchedUsers.size())
                         .currentPlayer((short) matchedUsers.size())
                         .topic(ChatTopic.values()[new Random().nextInt(ChatTopic.values().length)])
-                        .taggerAge(AgeGroup.from(matchedUsers.get(0).getBirth()))
+                        .taggerAge(AgeGroup.fromAge(calculateAge(matchedUsers.get(0).getBirth())))
                         .taggerNumber((short)1)
                         .build()
         );
 
-        // UserInGameInfo 생성 및 DB 저장
         short number = 1;
         for (Users u : matchedUsers) {
-            GameTeam team = (number == 1) ? GameTeam.MAFIA : GameTeam.CITIZEN; // 1명 마피아, 나머지 시민 예시
+            GameTeam team = (number == 1) ? GameTeam.MAFIA : GameTeam.CITIZEN;
             userInGameInfoService.saveOrThrow(
                     UserInGameInfo.builder()
                             .user(u)
                             .chatRoom(room)
-                            .userAge(AgeGroup.from(u.getBirth()))
+                            .userAge(AgeGroup.fromAge(calculateAge(u.getBirth())))
                             .userTeam(team)
                             .userNumber(number)
                             .readyFlag(false)
@@ -80,7 +83,6 @@ public class MatchServiceImpl implements MatchService {
             number++;
         }
 
-        // 각 유저에게 STOMP 브로드캐스트
         for (Users u : matchedUsers) {
             GameMatchedResponse response = GameMatchedResponse.builder()
                     .userRoomNumber(userInGameInfoService.getByUserAndChatRoom(u, room).getUserNumber())
@@ -109,6 +111,7 @@ public class MatchServiceImpl implements MatchService {
         }
     }
 }
+
 
 
 
