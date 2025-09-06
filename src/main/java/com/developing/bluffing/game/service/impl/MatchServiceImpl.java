@@ -25,7 +25,15 @@ public class MatchServiceImpl implements MatchService {
     private final ChatRoomService chatRoomService;
     private final UserInGameInfoService userInGameInfoService;
 
-    private static final int ROOM_SIZE = 6;
+    // =============================
+    // 테스트용: 2명, 첫 번째 유저가 마피아
+    // =============================
+    private static final int ROOM_SIZE = 2;
+
+    // =============================
+    // 원래 코드 (6명 기준, 연령대 다른 1명이 마피아)
+    // =============================
+    // private static final int ROOM_SIZE = 6;
 
     private final Map<MatchCategory, Queue<Users>> queues = new HashMap<>();
 
@@ -54,6 +62,10 @@ public class MatchServiceImpl implements MatchService {
             return;
         }
 
+        // =============================
+        // 원래 코드 주석 처리 시작
+        // =============================
+        /*
         // --- 연령대 분류 ---
         Map<AgeGroup, List<Users>> ageGroups = new HashMap<>();
         for (Users u : matchedUsers) {
@@ -77,6 +89,24 @@ public class MatchServiceImpl implements MatchService {
         List<Users> finalMatch = new ArrayList<>();
         finalMatch.addAll(sameAgeGroup);
         if (!differentAgeGroup.isEmpty()) finalMatch.add(differentAgeGroup.get(0));
+        */
+        // =============================
+        // 원래 코드 주석 처리 끝
+        // =============================
+
+        // =============================
+        // 테스트용 코드: 2명, 첫 번째 유저 마피아
+        // =============================
+        List<Users> sameAgeGroup = new ArrayList<>();
+        List<Users> differentAgeGroup = new ArrayList<>();
+        // 첫 번째 유저 마피아
+        differentAgeGroup.add(matchedUsers.get(0));
+        // 두 번째 유저 시민
+        sameAgeGroup.add(matchedUsers.get(1));
+
+        List<Users> finalMatch = new ArrayList<>();
+        finalMatch.addAll(sameAgeGroup);
+        finalMatch.addAll(differentAgeGroup);
 
         // --- 방 생성 ---
         ChatRoom room = chatRoomService.saveOrThrow(
@@ -87,7 +117,9 @@ public class MatchServiceImpl implements MatchService {
                         .maxPlayer((short) finalMatch.size())
                         .currentPlayer((short) finalMatch.size())
                         .topic(ChatTopic.values()[new Random().nextInt(ChatTopic.values().length)])
-                        .taggerAge(AgeGroup.fromAge(calculateAge(finalMatch.get(0).getBirth())))
+                        .taggerAge(calculateAge(finalMatch.get(0).getBirth()) >= 0
+                                ? AgeGroup.fromAge(calculateAge(finalMatch.get(0).getBirth()))
+                                : AgeGroup.ADULT)
                         .taggerNumber((short)1)
                         .build()
         );
@@ -95,7 +127,15 @@ public class MatchServiceImpl implements MatchService {
         // --- 팀 배정 ---
         for (int i = 0; i < finalMatch.size(); i++) {
             Users u = finalMatch.get(i);
-            GameTeam team = (i == finalMatch.size() - 1) ? GameTeam.MAFIA : GameTeam.CITIZEN; // 마지막 1명이 마피아
+            GameTeam team;
+
+            // 테스트용: 첫 번째 유저 마피아
+            if (differentAgeGroup.contains(u)) {
+                team = GameTeam.MAFIA;
+            } else {
+                team = GameTeam.CITIZEN;
+            }
+
             userInGameInfoService.saveOrThrow(
                     UserInGameInfo.builder()
                             .user(u)
@@ -138,6 +178,9 @@ public class MatchServiceImpl implements MatchService {
         }
     }
 }
+
+
+
 
 
 
