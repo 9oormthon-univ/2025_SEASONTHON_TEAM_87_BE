@@ -117,9 +117,7 @@ public class MatchServiceImpl implements MatchService {
                         .maxPlayer((short) finalMatch.size())
                         .currentPlayer((short) finalMatch.size())
                         .topic(ChatTopic.values()[new Random().nextInt(ChatTopic.values().length)])
-                        .taggerAge(calculateAge(finalMatch.get(0).getBirth()) >= 0
-                                ? AgeGroup.fromAge(calculateAge(finalMatch.get(0).getBirth()))
-                                : AgeGroup.ADULT)
+                        .taggerAge(AgeGroup.fromAge(calculateAge(finalMatch.get(0).getBirth())))
                         .taggerNumber((short)1)
                         .build()
         );
