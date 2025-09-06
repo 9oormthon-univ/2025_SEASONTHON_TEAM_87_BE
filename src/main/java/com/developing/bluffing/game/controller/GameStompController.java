@@ -6,6 +6,8 @@ import com.developing.bluffing.game.dto.request.GameMatchRequest;
 import com.developing.bluffing.game.dto.response.GameChatMessageResponse;
 import com.developing.bluffing.security.entity.UserDetailImpl;
 import com.developing.bluffing.game.service.MatchService;
+import com.developing.bluffing.user.entity.Users;
+import com.developing.bluffing.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.handler.annotation.MessageMapping;
@@ -43,7 +45,7 @@ public class GameStompController {
 
         UUID userId = UUID.fromString(Principal.getName());
         Users user = userService.getById(userId);
-        log.info("[MESSAGE] [MATCH] userInfo id : {} username : {} userLoginId : {}",user.getId(),user.getName(),usesr.LoginId())
+        log.info("[MESSAGE] [MATCH] userInfo id : {} username : {} userLoginId : {}",user.getId(),user.getName(),user.getLoginId());
         matchService.enqueue( user , request.getMatchCategory());
     }
 
