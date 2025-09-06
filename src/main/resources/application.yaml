@@ -4,20 +4,14 @@ spring:
     active: dev
 
   datasource:
-    url: jdbc:mysql://localhost:3306/bluffing
-      ?useUnicode=true
-      &characterEncoding=utf8
-      &connectionCollation=utf8mb4_0900_ai_ci
-      &serverTimezone=Asia/Seoul
-      &useSSL=false
-      &allowPublicKeyRetrieval=true
-    username: root
-    password: root
+    url: jdbc:mysql://database-1.cdgqesiy6fqi.ap-northeast-2.rds.amazonaws.com:3306/bluffing?useUnicode=true&characterEncoding=utf8&connectionCollation=utf8mb4_0900_ai_ci&serverTimezone=Asia/Seoul&useSSL=false&allowPublicKeyRetrieval=true
+    username: admin # RDS에서 설정한 username
+    password: 123456789 # RDS에서 설정한 password
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   jpa:
     hibernate:
-      ddl-auto: create #have to change when prod
+      ddl-auto: update # 운영 환경에서는 create 대신 update 또는 validate 사용
     properties:
       hibernate:
         format_sql: true
@@ -34,12 +28,11 @@ server:
       force: true
       enabled: true
 
-
 jwt:
   issuer: "bluffing-api"
   access:
     secret: "VyBaM1g3GVOBJAs4DJf8/U1WnDBftsE+xzcYUdBYZOI="
-    ttl: "PT15M"                         # ISO-8601 Duration: 15분
+    ttl: "PT15M" # ISO-8601 Duration: 15분
   refresh:
     secret: "k3GcE4phxTGdcr6xWcIvOQ84jaHVRb3227zX93PxuJY="
-    ttl: "P7D"                           # 7일
+    ttl: "P7D" # 7일
