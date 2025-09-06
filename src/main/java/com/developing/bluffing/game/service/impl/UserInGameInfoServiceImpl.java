@@ -10,11 +10,13 @@ import com.developing.bluffing.game.scheduler.dto.VoteResult;
 import com.developing.bluffing.game.service.UserInGameInfoService;
 import com.developing.bluffing.user.entity.Users;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class UserInGameInfoServiceImpl implements UserInGameInfoService {
@@ -57,24 +59,33 @@ public class UserInGameInfoServiceImpl implements UserInGameInfoService {
         List<VoteResult> results = new ArrayList<>();
 
         for (UserInGameInfo u : userInGameInfos) {
-            Short voted = u.getVotedUserNumber();
-            // 이미 있는 후보 찾기
+            // 1) 무효표는 집계 제외
+            Short votedBoxed = u.getVotedUserNumber();
+            if (votedBoxed == null) {
+                continue; // 👈 null이면 스킵! (0으로 치환하지 않음)
+            }
+            short voted = votedBoxed;
+
+            // 2) 이미 있는 후보 찾기
             VoteResult existing = results.stream()
-                    .filter(r -> r.getUserNumber().equals(voted))
+                    .filter(r -> r.getUserNumber() == voted) // primitive 비교 OK
                     .findFirst()
                     .orElse(null);
 
             if (existing == null) {
-                results.add(new VoteResult(voted, (short) 1,u.getUserTeam()));
+                // NOTE: 여기는 "투표 대상"의 팀을 넣고 싶은 경우라면
+                // voted(=대상)의 팀을 찾아서 넣어야 합니다. (지금은 "투표자" 팀을 넣고 있음)
+                results.add(new VoteResult(voted, (short) 1, u.getUserTeam()));
             } else {
-                // 값 증가 (새 객체로 교체)
                 results.remove(existing);
-                results.add(new VoteResult(voted, (short) (existing.getResult() + 1),existing.getUserTeam()));
+                results.add(new VoteResult(voted, (short) (existing.getResult() + 1), existing.getUserTeam()));
             }
+            
         }
 
         return results;
     }
+
 
     @Override
     public Long countReady(ChatRoom chatRoom) {

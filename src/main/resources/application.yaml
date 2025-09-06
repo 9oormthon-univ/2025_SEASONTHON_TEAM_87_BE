@@ -1,7 +1,7 @@
 # src/main/resources/application.yaml
 spring:
   profiles:
-    active:
+    active: dev
 
   datasource:
     url: jdbc:mysql://${DB_HOST}:3306/bluffing?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Seoul&useSSL=false&allowPublicKeyRetrieval=true
