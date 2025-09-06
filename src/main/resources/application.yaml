@@ -1,7 +1,7 @@
 # src/main/resources/application.yaml
 spring:
   profiles:
-    active: dev
+    active:
 
   datasource:
     url: jdbc:mysql://${DB_HOST:localhost}:3306/bluffing?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Seoul&useSSL=false&allowPublicKeyRetrieval=true
@@ -29,6 +29,15 @@ server:
       force: true
       enabled: true
 
+<<<<<<< HEAD
+logging:
+  level:
+    org.springframework.web.socket: DEBUG
+    org.springframework.messaging: DEBUG
+    org.springframework.security: DEBUG
+
+=======
+>>>>>>> 5a55c404e4db8ba28ade5b4761dea8816adf92a3
 jwt:
   issuer: "bluffing-api"
   access:

@@ -11,6 +11,7 @@ import org.springframework.messaging.support.MessageHeaderAccessor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.stereotype.Component;
 
+import java.nio.file.AccessDeniedException;
 import java.util.List;
 import java.util.UUID;
 
@@ -25,12 +26,17 @@ public class StompAuthChannelInterceptor implements ChannelInterceptor {
         StompHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
 
         if (StompCommand.CONNECT.equals(accessor.getCommand())) {
-            String authHeader = accessor.getFirstNativeHeader("Authorization");
-            if (authHeader != null && authHeader.startsWith("Bearer ")) {
-                String token = authHeader.substring(7);
-                UUID userId = jwtUtil.getSubjectFromAccessToken(token);
-                accessor.setUser(new UsernamePasswordAuthenticationToken(userId, null, List.of()));
+            String auth = accessor.getFirstNativeHeader("Authorization");
+            if (auth == null || !auth.startsWith("Bearer ")) {
+                try {
+                    throw new AccessDeniedException("Missing Authorization"); // => ERROR 후 종료
+                } catch (AccessDeniedException e) {
+                    throw new RuntimeException(e);
+                }
             }
+            String token = auth.substring(7);
+            UUID userId = jwtUtil.getSubjectFromAccessToken(token); // 검증 로직 포함
+            accessor.setUser(new UsernamePasswordAuthenticationToken(userId, null, List.of()));
         }
 
         return message;
