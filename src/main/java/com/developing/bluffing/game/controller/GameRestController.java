@@ -12,22 +12,25 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import jakarta.validation.Valid;
+import org.springframework.validation.annotation.Validated;
 
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/game")
+@Validated
 public class GameRestController {
 
     private final GameRestFacade facade;
 
     @PostMapping("/ready")
-    public ResponseEntity<Void> ready(@AuthenticationPrincipal UserDetailImpl userDetail, GameReadyRequest r){
+    public ResponseEntity<Void> ready(@AuthenticationPrincipal UserDetailImpl userDetail, @Valid @RequestBody GameReadyRequest r){
         facade.readyAndScheduleFlag(userDetail.getUser(),r);
         return ResponseEntity.ok().build();
     }
 
     @PostMapping("/vote")
-    public ResponseEntity<Void> vote(@AuthenticationPrincipal UserDetailImpl userDetail, GameVoteRequest r){
+    public ResponseEntity<Void> vote(@AuthenticationPrincipal UserDetailImpl userDetail, @Valid @RequestBody GameVoteRequest r){
         facade.voteAndScheduleFlag(userDetail.getUser(),r);
         return ResponseEntity.ok().build();
     }

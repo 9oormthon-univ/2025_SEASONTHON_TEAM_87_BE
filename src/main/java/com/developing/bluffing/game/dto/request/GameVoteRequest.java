@@ -1,15 +1,18 @@
 package com.developing.bluffing.game.dto.request;
 
-
 import lombok.Builder;
 import lombok.Getter;
 
+import jakarta.validation.constraints.NotNull;
 import java.util.UUID;
 
 @Getter
 public class GameVoteRequest {
 
+    @NotNull(message = "chatRoomId는 필수입니다.")
     private UUID chatRoomId;
+
+    @NotNull(message = "votedUserNumber는 필수입니다.")
     private Short votedUserNumber;
 
     @Builder
@@ -24,3 +27,4 @@ public class GameVoteRequest {
         this.votedUserNumber = votedUserNumber;
     }
 }
+
