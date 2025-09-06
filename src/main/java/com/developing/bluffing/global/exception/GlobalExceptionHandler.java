@@ -3,6 +3,8 @@ package com.developing.bluffing.global.exception;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.handler.annotation.MessageExceptionHandler;
+import org.springframework.messaging.simp.annotation.SendToUser;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -40,6 +42,12 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(response);
+    }
+
+    @MessageExceptionHandler
+    @SendToUser("/queue/errors")
+    public Map<String,String> handleWsException(Exception ex) {
+        return Map.of("error", ex.getClass().getSimpleName(), "message", ex.getMessage());
     }
 
     private Map<String, Object> commonExceptionResponse(GlobalException globalException) {
