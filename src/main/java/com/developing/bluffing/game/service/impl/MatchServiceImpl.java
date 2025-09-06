@@ -2,7 +2,7 @@ package com.developing.bluffing.game.service.impl;
 
 import com.developing.bluffing.game.entity.ChatRoom;
 import com.developing.bluffing.game.entity.UserInGameInfo;
-import com.developing.bluffing.game.entity.Users;
+import com.developing.bluffing.user.entity.Users;
 import com.developing.bluffing.game.entity.enums.*;
 import com.developing.bluffing.game.dto.response.GameMatchedResponse;
 import com.developing.bluffing.game.service.ChatRoomService;
