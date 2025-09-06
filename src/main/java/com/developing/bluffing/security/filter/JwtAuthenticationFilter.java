@@ -39,11 +39,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getRequestURI();
 
-        return path.startsWith("/api/v1/auth/kakao/")
-                || path.startsWith("/api/v1/auth/local/")
-                || path.equals("/auth/login/kakao/login-url")
-                || path.equals("/auth/login/kakao/callback")
-                || path.equals("/login");
+        return path.startsWith("/api/v1/auth/")
+                || path.equals("/api/v1/user/id")
+                || path.startsWith("/ws/")
+                || path.startsWith("/api/v1/auth/local");
 
     }
 
