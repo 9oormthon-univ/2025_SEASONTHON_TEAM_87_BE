@@ -54,49 +54,76 @@ public class MatchServiceImpl implements MatchService {
             return;
         }
 
+        // --- 연령대 분류 ---
+        Map<AgeGroup, List<Users>> ageGroups = new HashMap<>();
+        for (Users u : matchedUsers) {
+            AgeGroup age = AgeGroup.fromAge(calculateAge(u.getBirth()));
+            ageGroups.computeIfAbsent(age, k -> new ArrayList<>()).add(u);
+        }
+
+        List<Users> sameAgeGroup = new ArrayList<>();
+        List<Users> differentAgeGroup = new ArrayList<>();
+
+        // 가장 많은 연령대 그룹부터 5명 채우고 나머지는 다른 연령대로
+        ageGroups.entrySet().stream()
+                .sorted((a, b) -> b.getValue().size() - a.getValue().size())
+                .forEach(entry -> {
+                    for (Users u : entry.getValue()) {
+                        if (sameAgeGroup.size() < 5) sameAgeGroup.add(u);
+                        else differentAgeGroup.add(u);
+                    }
+                });
+
+        List<Users> finalMatch = new ArrayList<>();
+        finalMatch.addAll(sameAgeGroup);
+        if (!differentAgeGroup.isEmpty()) finalMatch.add(differentAgeGroup.get(0));
+
+        // --- 방 생성 ---
         ChatRoom room = chatRoomService.saveOrThrow(
                 ChatRoom.builder()
                         .matchCategory(matchCategory)
                         .gamePhase(GamePhase.WAIT)
                         .winnerTeam(null)
-                        .maxPlayer((short) matchedUsers.size())
-                        .currentPlayer((short) matchedUsers.size())
+                        .maxPlayer((short) finalMatch.size())
+                        .currentPlayer((short) finalMatch.size())
                         .topic(ChatTopic.values()[new Random().nextInt(ChatTopic.values().length)])
-                        .taggerAge(AgeGroup.fromAge(calculateAge(matchedUsers.get(0).getBirth())))
+                        .taggerAge(AgeGroup.fromAge(calculateAge(finalMatch.get(0).getBirth())))
                         .taggerNumber((short)1)
                         .build()
         );
 
-        short number = 1;
-        for (Users u : matchedUsers) {
-            GameTeam team = (number == 1) ? GameTeam.MAFIA : GameTeam.CITIZEN;
+        // --- 팀 배정 ---
+        for (int i = 0; i < finalMatch.size(); i++) {
+            Users u = finalMatch.get(i);
+            GameTeam team = (i == finalMatch.size() - 1) ? GameTeam.MAFIA : GameTeam.CITIZEN; // 마지막 1명이 마피아
             userInGameInfoService.saveOrThrow(
                     UserInGameInfo.builder()
                             .user(u)
                             .chatRoom(room)
                             .userAge(AgeGroup.fromAge(calculateAge(u.getBirth())))
                             .userTeam(team)
-                            .userNumber(number)
+                            .userNumber((short)(i + 1))
                             .readyFlag(false)
                             .build()
             );
-            number++;
         }
 
-        for (Users u : matchedUsers) {
+        // --- 클라이언트에 알림 ---
+        for (Users u : finalMatch) {
+            UserInGameInfo info = userInGameInfoService.getByUserAndChatRoom(u, room);
             GameMatchedResponse response = GameMatchedResponse.builder()
-                    .userRoomNumber(userInGameInfoService.getByUserAndChatRoom(u, room).getUserNumber())
-                    .userAge(userInGameInfoService.getByUserAndChatRoom(u, room).getUserAge())
-                    .team(userInGameInfoService.getByUserAndChatRoom(u, room).getUserTeam())
+                    .userRoomNumber(info.getUserNumber())
+                    .userAge(info.getUserAge())
+                    .team(info.getUserTeam())
                     .citizenTeamAgeList(
                             userInGameInfoService.getByChatRoom(room).stream()
-                                    .filter(info -> info.getUserTeam() == GameTeam.CITIZEN)
+                                    .filter(i -> i.getUserTeam() == GameTeam.CITIZEN)
                                     .map(UserInGameInfo::getUserAge)
                                     .toList()
                     )
                     .mafiaTeamAge(
                             userInGameInfoService.getByChatRoom(room).stream()
-                                    .filter(info -> info.getUserTeam() == GameTeam.MAFIA)
+                                    .filter(i -> i.getUserTeam() == GameTeam.MAFIA)
                                     .map(UserInGameInfo::getUserAge)
                                     .findFirst()
                                     .orElse(null)
@@ -111,6 +138,7 @@ public class MatchServiceImpl implements MatchService {
         }
     }
 }
+
 
 
 
