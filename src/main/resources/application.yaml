@@ -39,7 +39,7 @@ jwt:
   issuer: "bluffing-api"
   access:
     secret: "VyBaM1g3GVOBJAs4DJf8/U1WnDBftsE+xzcYUdBYZOI="
-    ttl: "PT15M" # 15분
+    ttl: "P1D" #"PT15M" # 15분
   refresh:
     secret: "k3GcE4phxTGdcr6xWcIvOQ84jaHVRb3227zX93PxuJY="
     ttl: "P7D" # 7일
