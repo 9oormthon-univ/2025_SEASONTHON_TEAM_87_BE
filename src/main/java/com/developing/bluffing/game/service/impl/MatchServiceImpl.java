@@ -170,7 +170,7 @@ public class MatchServiceImpl implements MatchService {
 
             messagingTemplate.convertAndSendToUser(
                     u.getId().toString(),
-                    "/api/v1/game/match/notify",
+                    "/queue/match/notify",
                     response
             );
         }

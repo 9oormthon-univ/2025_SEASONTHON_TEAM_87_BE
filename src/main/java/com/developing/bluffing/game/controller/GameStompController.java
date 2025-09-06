@@ -33,12 +33,12 @@ public class GameStompController {
             @AuthenticationPrincipal UserDetailImpl userDetail) {
         GameChatMessageResponse msg = GameFactory.toGameChatMessageResponse(request);
         messaging.convertAndSend(
-                "/api/v1/game/server/room/" + request.getRoomId(),
+                "/topic/game/room/" + request.getRoomId(),
                 msg
         );
     }
 
-    @MessageMapping("/match")
+    @MessageMapping("/notify")
     public void handleMatch(
             @Payload GameMatchRequest request,
             Principal Principal) {

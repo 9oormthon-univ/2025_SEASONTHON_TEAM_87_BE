@@ -79,9 +79,10 @@ public class GameRestFacadeImpl implements GameRestFacade {
                     = GameFactory.toGamePhaseChangeResponse(task,"chat start");
             // 매칭시 클라이언트에서 방id를 구독해야 확인 가능
             messaging.convertAndSend(
-                    "/api/v1/game/server/room/" + task.getRoomId(),
+                    "/topic/game/room/" + task.getRoomId(),
                     response
             );
+
             scheduler.schedule(task);
         }
     }
