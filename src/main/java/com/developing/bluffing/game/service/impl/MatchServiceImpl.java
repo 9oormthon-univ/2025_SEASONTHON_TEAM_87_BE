@@ -6,6 +6,7 @@ import com.developing.bluffing.game.entity.enums.*;
 import com.developing.bluffing.game.dto.response.GameMatchedResponse;
 import com.developing.bluffing.game.service.ChatRoomService;
 import com.developing.bluffing.game.service.UserInGameInfoService;
+import com.developing.bluffing.game.service.MatchService;
 import com.developing.bluffing.user.entity.Users;
 import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -16,7 +17,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 @Service
 @RequiredArgsConstructor
-public class MatchService {
+public class MatchServiceImpl implements MatchService {
 
     private final SimpMessagingTemplate messagingTemplate;
     private final ChatRoomService chatRoomService;
@@ -27,6 +28,7 @@ public class MatchService {
     // 매칭 대기열
     private final Map<MatchCategory, Queue<Users>> queues = new HashMap<>();
 
+    @Override
     public synchronized void enqueue(Users user, MatchCategory matchCategory) {
         queues.computeIfAbsent(matchCategory, k -> new ConcurrentLinkedQueue<>()).add(user);
         tryMatch(matchCategory);
@@ -107,5 +109,6 @@ public class MatchService {
         }
     }
 }
+
 
 
