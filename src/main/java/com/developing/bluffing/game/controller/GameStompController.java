@@ -13,6 +13,8 @@ import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
+import java.security.Principal;
+import java.util.UUID;
 
 @Slf4j
 @Controller
@@ -21,6 +23,7 @@ public class GameStompController {
 
     private final SimpMessagingTemplate messaging;
     private final MatchService matchService; // ✅ 인터페이스 주입
+    private final UserService userService;
 
     @MessageMapping("/message")
     public void handleChat(
@@ -36,9 +39,10 @@ public class GameStompController {
     @MessageMapping("/match")
     public void handleMatch(
             @Payload GameMatchRequest request,
-            @AuthenticationPrincipal UserDetailImpl userDetail) {
+            Principal Principal) {
 
-        Users user = userDetail.getUser();
+        UUID userId = UUID.fromString(Principal.getName());
+        Users user = userService.getById(userId);
         log.info("[MESSAGE] [MATCH] userInfo id : {} username : {} userLoginId : {}",user.getId(),user.getName(),usesr.LoginId())
         matchService.enqueue( user , request.getMatchCategory());
     }
