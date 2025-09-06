@@ -11,6 +11,7 @@ import com.developing.bluffing.game.service.UserInGameInfoService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.Period;
@@ -42,6 +43,7 @@ public class MatchServiceImpl implements MatchService {
     }
 
     @Override
+    @Transactional
     public synchronized void enqueue(Users user, MatchCategory cat) {
         Queue<Users> q = queues.computeIfAbsent(cat, k -> new ConcurrentLinkedQueue<>());
         // 이미 큐에 있으면 무시
@@ -50,7 +52,8 @@ public class MatchServiceImpl implements MatchService {
         tryMatch(cat);
     }
 
-    private void tryMatch(MatchCategory matchCategory) {
+
+    protected void tryMatch(MatchCategory matchCategory) {
         Queue<Users> queue = queues.get(matchCategory);
         if (queue.size() < ROOM_SIZE) return;
 
@@ -153,6 +156,7 @@ public class MatchServiceImpl implements MatchService {
         for (Users u : finalMatch) {
             UserInGameInfo info = userInGameInfoService.getByUserAndChatRoom(u, room);
             GameMatchedResponse response = GameMatchedResponse.builder()
+                    .roomId(room.getId())
                     .userRoomNumber(info.getUserNumber())
                     .userAge(info.getUserAge())
                     .team(info.getUserTeam())
