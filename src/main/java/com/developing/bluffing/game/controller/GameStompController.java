@@ -7,12 +7,14 @@ import com.developing.bluffing.game.dto.response.GameChatMessageResponse;
 import com.developing.bluffing.security.entity.UserDetailImpl;
 import com.developing.bluffing.game.service.MatchService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 
+@Slf4j
 @Controller
 @RequiredArgsConstructor
 public class GameStompController {
@@ -35,7 +37,10 @@ public class GameStompController {
     public void handleMatch(
             @Payload GameMatchRequest request,
             @AuthenticationPrincipal UserDetailImpl userDetail) {
-        matchService.enqueue(userDetail.getUser(), request.getMatchCategory());
+
+        Users user = userDetail.getUser();
+        log.info("[MESSAGE] [MATCH] userInfo id : {} username : {} userLoginId : {}",user.getId(),user.getName(),usesr.LoginId())
+        matchService.enqueue( user , request.getMatchCategory());
     }
 
     public record MatchResponse(String roomId, String status) {}

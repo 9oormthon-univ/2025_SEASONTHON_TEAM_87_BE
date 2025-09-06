@@ -1,6 +1,9 @@
 package com.developing.bluffing.global.interceptor;
 
+import com.developing.bluffing.security.entity.UserDetailImpl;
 import com.developing.bluffing.security.util.JwtUtil;
+import com.developing.bluffing.user.entity.Users;
+import com.developing.bluffing.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
@@ -20,26 +23,33 @@ import java.util.UUID;
 public class StompAuthChannelInterceptor implements ChannelInterceptor {
 
     private final JwtUtil jwtUtil;
+    private final UserService userService; // 또는 UsersService
 
     @Override
     public Message<?> preSend(Message<?> message, MessageChannel channel) {
         StompHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
+        if (accessor == null) return message;
 
         if (StompCommand.CONNECT.equals(accessor.getCommand())) {
             String auth = accessor.getFirstNativeHeader("Authorization");
             if (auth == null || !auth.startsWith("Bearer ")) {
-                try {
-                    throw new AccessDeniedException("Missing Authorization"); // => ERROR 후 종료
-                } catch (AccessDeniedException e) {
-                    throw new RuntimeException(e);
-                }
+                throw new org.springframework.messaging.MessagingException("Missing Authorization");
             }
+
             String token = auth.substring(7);
-            UUID userId = jwtUtil.getSubjectFromAccessToken(token); // 검증 로직 포함
-            accessor.setUser(new UsernamePasswordAuthenticationToken(userId, null, List.of()));
+            UUID userId = jwtUtil.getSubjectFromAccessToken(token);
+
+            Users user = userService.getById(userId);
+            UserDetailImpl userDetail = new UserDetailImpl(user); // ← 네 구현에 맞게 생성
+            UsernamePasswordAuthenticationToken authentication =
+                    new UsernamePasswordAuthenticationToken(
+                            userDetail, null, userDetail.getAuthorities());
+
+            accessor.setUser(authentication); // ★ 이제 @AuthenticationPrincipal UserDetailImpl 주입 OK
         }
 
         return message;
     }
-
 }
+
+
